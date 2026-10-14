@@ -174,54 +174,212 @@ async function show(barcode) {
 }
 
 // ---------- scanner ----------
-let scanner = null;
-async function startScan() {
-  const btn = $("scan-btn");
-  if (scanner) { await stopScan(); return; }
-  scanner = new Html5Qrcode("reader", {
-    formatsToSupport: [
-      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
-      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
-      Html5QrcodeSupportedFormats.CODE_128,
-    ],
-    experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-    verbose: false,
-  });
-  btn.textContent = "✕ עצור סריקה";
-  try {
-    await scanner.start(
-      { facingMode: "environment" },
-      { fps: 12, qrbox: (w, h) => ({ width: Math.min(w * 0.85, 360), height: Math.min(h * 0.4, 160) }) },
-      async text => {
-        if (navigator.vibrate) navigator.vibrate(80);
-        await stopScan();
-        $("barcode-input").value = text;
-        show(text);
-      },
-      () => {}
-    );
-  } catch (e) {
-    await stopScan();
-    $("result").classList.remove("hidden");
-    $("result").innerHTML = `<p>לא הצלחתי לפתוח את המצלמה: ${esc(e.message || e)}</p><p class="muted">צריך לאשר גישה למצלמה בדפדפן. אפשר גם להקליד את הברקוד ידנית.</p>`;
+// Native BarcodeDetector (Android Chrome) when it supports EAN, otherwise ZXing-C++ compiled to WASM.
+const FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"];
+const video = $("video"), cam = $("cam"), frameEl = $("frame");
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+let detector = null, stream = null, track = null, paused = false, busy = false, lastCode = "", lastAt = 0;
+let cameras = [], camIndex = -1;
+
+async function getDetector() {
+  if (detector) return detector;
+  if ("BarcodeDetector" in window) {
+    try {
+      const sup = await window.BarcodeDetector.getSupportedFormats();
+      if (sup.includes("ean_13")) return (detector = new window.BarcodeDetector({ formats: FORMATS.filter(f => sup.includes(f)) }));
+    } catch {}
   }
-}
-async function stopScan() {
-  if (scanner) {
-    try { await scanner.stop(); } catch {}
-    try { scanner.clear(); } catch {}
-    scanner = null;
-  }
-  $("scan-btn").textContent = "📷 סרוק ברקוד";
+  return (detector = new window.BarcodeDetectionAPI.BarcodeDetector({ formats: FORMATS }));
 }
 
+// EAN/UPC check digit, so a misread never reaches the price lookup
+function validCode(code) {
+  if (!/^\d+$/.test(code)) return false;
+  if (![8, 12, 13].includes(code.length)) return code.length >= 6;
+  const d = code.split("").map(Number), check = d.pop();
+  const sum = d.reverse().reduce((s, x, i) => s + x * (i % 2 === 0 ? 3 : 1), 0);
+  return (10 - (sum % 10)) % 10 === check;
+}
+
+function overlay(msg, btnText) {
+  $("cam-msg").textContent = msg || "";
+  $("cam-action").textContent = btnText || "📷 הפעל מצלמה";
+  $("cam-overlay").classList.toggle("hidden", !btnText);
+}
+
+function pickBackCamera(list) {
+  // multi-lens phones: avoid ultra-wide / macro lenses that can't focus on a barcode
+  const back = list.filter(d => /back|rear|environment|אחורית/i.test(d.label));
+  const pool = back.length ? back : list;
+  const main = pool.find(d => !/ultra|wide|macro|tele|depth/i.test(d.label));
+  return list.indexOf(main || pool[0]);
+}
+
+async function startCamera(deviceId) {
+  stopCamera();
+  overlay("", null);
+  const source = deviceId ? { deviceId: { exact: deviceId } } : { facingMode: { ideal: "environment" } };
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { ...source, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    });
+  } catch (e) {
+    const denied = e && (e.name === "NotAllowedError" || e.name === "SecurityError");
+    overlay(denied ? "אין הרשאה למצלמה. אשר גישה למצלמה בהגדרות הדפדפן ונסה שוב." : `לא הצלחתי לפתוח מצלמה (${e.name || e}).`, "📷 נסה שוב");
+    return;
+  }
+  video.srcObject = stream;
+  track = stream.getVideoTracks()[0];
+  try { await video.play(); } catch {}
+
+  // continuous autofocus where the browser allows it
+  try {
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.focusMode && caps.focusMode.includes("continuous")) await track.applyConstraints({ advanced: [{ focusMode: "continuous" }] });
+    $("torch").classList.toggle("hidden", !caps.torch);
+  } catch {}
+
+  // after permission, device labels are known: offer switching lenses
+  try {
+    cameras = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+    $("switch-cam").classList.toggle("hidden", cameras.length < 2);
+    const cur = track.getSettings().deviceId;
+    camIndex = cameras.findIndex(d => d.deviceId === cur);
+    if (!deviceId && cameras.length > 2) {
+      const best = pickBackCamera(cameras);
+      if (best >= 0 && cameras[best].deviceId !== cur) return startCamera(cameras[best].deviceId);
+    }
+  } catch {}
+
+  resume();
+}
+
+function stopCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; track = null;
+  $("torch").classList.remove("on");
+}
+
+function resume() {
+  paused = false;
+  cam.classList.remove("paused");
+  frameEl.classList.remove("hit");
+  overlay("", null);
+  $("hint").textContent = "שים את הברקוד בתוך המסגרת, לרוחב";
+  requestAnimationFrame(loop);
+}
+
+// Map the on-screen frame to video pixels (video uses object-fit: cover)
+function frameCrop() {
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const cw = cam.clientWidth, ch = cam.clientHeight;
+  const scale = Math.max(cw / vw, ch / vh);
+  const offX = (vw * scale - cw) / 2, offY = (vh * scale - ch) / 2;
+  const f = frameEl.getBoundingClientRect(), c = cam.getBoundingClientRect();
+  // margin around the frame so a barcode slightly outside still reads
+  const mx = f.width * 0.08, my = f.height * 0.35;
+  let x = (f.left - c.left - mx + offX) / scale, y = (f.top - c.top - my + offY) / scale;
+  let w = (f.width + 2 * mx) / scale, h = (f.height + 2 * my) / scale;
+  x = Math.max(0, x); y = Math.max(0, y); w = Math.min(vw - x, w); h = Math.min(vh - y, h);
+  return { x, y, w, h };
+}
+
+let lastTick = 0;
+async function loop(ts) {
+  if (paused || !stream) return;
+  requestAnimationFrame(loop);
+  if (busy || ts - lastTick < 90 || video.readyState < 2 || !video.videoWidth) return;
+  lastTick = ts;
+  busy = true;
+  try {
+    const { x, y, w, h } = frameCrop();
+    const s = Math.min(1, 1280 / w); // cap work per frame
+    canvas.width = Math.round(w * s); canvas.height = Math.round(h * s);
+    ctx.drawImage(video, x, y, w, h, 0, 0, canvas.width, canvas.height);
+    const det = await getDetector();
+    const found = await det.detect(canvas);
+    const hit = found.map(b => String(b.rawValue).trim()).find(validCode);
+    if (hit && !paused) onScan(hit);
+  } catch (e) {
+    console.warn(e);
+  } finally {
+    busy = false;
+  }
+}
+
+let audioCtx = null;
+function beep() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.frequency.value = 1500; g.gain.value = 0.15;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.09);
+  } catch {}
+}
+
+function onScan(code) {
+  const now = Date.now();
+  if (code === lastCode && now - lastAt < 2500) return;
+  lastCode = code; lastAt = now;
+  paused = true;
+  cam.classList.add("paused");
+  frameEl.classList.add("hit");
+  if (navigator.vibrate) navigator.vibrate(80);
+  beep();
+  $("hint").textContent = `נסרק: ${code}`;
+  $("barcode-input").value = code;
+  show(code);
+  setTimeout(() => overlay("", "📷 סרוק מוצר נוסף"), 600);
+}
+
+$("cam-action").addEventListener("click", () => {
+  beep(); // a user gesture unlocks audio on iOS
+  if (stream && paused) {
+    resume();
+    $("scan-card").scrollIntoView({ behavior: "smooth", block: "start" });
+  } else {
+    startCamera();
+  }
+});
+$("torch").addEventListener("click", async () => {
+  if (!track) return;
+  const on = !$("torch").classList.contains("on");
+  try { await track.applyConstraints({ advanced: [{ torch: on }] }); $("torch").classList.toggle("on", on); } catch {}
+});
+$("switch-cam").addEventListener("click", () => {
+  if (cameras.length < 2) return;
+  camIndex = (camIndex + 1) % cameras.length;
+  startCamera(cameras[camIndex].deviceId);
+});
+document.addEventListener("visibilitychange", async () => {
+  if (document.hidden) { stopCamera(); return; }
+  if (stream) return;
+  const keep = paused;
+  await startCamera(camIndex >= 0 && cameras[camIndex] ? cameras[camIndex].deviceId : undefined);
+  if (keep && stream) { paused = true; cam.classList.add("paused"); overlay("", "📷 סרוק מוצר נוסף"); }
+});
+
 // ---------- init ----------
-$("scan-btn").addEventListener("click", startScan);
 $("manual").addEventListener("submit", e => {
   e.preventDefault();
   const v = $("barcode-input").value.trim();
-  if (v) { stopScan(); show(v); }
+  if (v) {
+    paused = true; cam.classList.add("paused");
+    overlay("", "📷 סרוק מוצר נוסף");
+    show(v);
+  }
 });
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  overlay("הדפדפן לא תומך במצלמה. אפשר להקליד ברקוד ידנית.", "📷 נסה שוב");
+} else {
+  startCamera();
+}
+// warm up the WASM decoder so the first scan is fast
+getDetector().then(d => d.detect(Object.assign(document.createElement("canvas"), { width: 4, height: 4 }))).catch(() => {});
+
 $("maxup").value = settings.maxUp;
 $("maxup-val").textContent = settings.maxUp;
 $("maxup").addEventListener("input", e => {

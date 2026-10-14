@@ -56,8 +56,6 @@ button.primary {
   border: none; font-weight: 700; font-size: 18px; padding: 16px;
 }
 #manual input { flex: 1; min-width: 0; direction: ltr; text-align: right; }
-#reader { border-radius: 10px; overflow: hidden; }
-#reader:empty { display: none; }
 
 .product-name { font-size: 20px; font-weight: 700; margin: 0 0 2px; }
 .price-box { text-align: center; margin: 14px 0 6px; }
@@ -87,3 +85,48 @@ td.num { direction: ltr; text-align: left; font-variant-numeric: tabular-nums; }
 .settings label { display: block; margin-top: 12px; }
 .settings input[type=range] { width: 100%; padding: 0; }
 .settings select { width: 100%; margin-top: 4px; }
+
+/* ---------- camera ---------- */
+.cam {
+  position: relative; width: 100%; aspect-ratio: 4 / 3; max-height: 62vh;
+  background: #000; border-radius: 12px; overflow: hidden;
+}
+.cam video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.frame {
+  position: absolute; left: 8%; right: 8%; top: 30%; height: 40%;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  transition: box-shadow .15s;
+}
+.frame.hit { box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5), inset 0 0 0 4px #22c55e; }
+.corner { position: absolute; width: 28px; height: 28px; border: 4px solid #fff; }
+.corner.tl { top: -2px; left: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 10px; }
+.corner.tr { top: -2px; right: -2px; border-left: 0; border-bottom: 0; border-top-right-radius: 10px; }
+.corner.bl { bottom: -2px; left: -2px; border-right: 0; border-top: 0; border-bottom-left-radius: 10px; }
+.corner.br { bottom: -2px; right: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 10px; }
+.frame.hit .corner { border-color: #22c55e; }
+.laser {
+  position: absolute; left: 6%; right: 6%; top: 50%; height: 2px;
+  background: #ef4444; box-shadow: 0 0 8px 2px rgba(239, 68, 68, .7);
+  animation: laser 1.6s ease-in-out infinite;
+}
+.frame.hit .laser, .cam.paused .laser { display: none; }
+@keyframes laser { 0%, 100% { transform: translateY(-38px); } 50% { transform: translateY(38px); } }
+.hint {
+  position: absolute; left: 0; right: 0; bottom: 10px; text-align: center;
+  color: #fff; font-size: 15px; font-weight: 600; text-shadow: 0 1px 3px #000;
+}
+.cam-tools { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px; }
+.tool {
+  background: rgba(0, 0, 0, .55); color: #fff; border: 1px solid rgba(255, 255, 255, .4);
+  width: 44px; height: 44px; padding: 0; border-radius: 50%; font-size: 20px;
+}
+.tool.on { background: #facc15; }
+.cam-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px; padding: 16px;
+  background: rgba(0, 0, 0, .65); color: #fff; text-align: center;
+}
+.cam-overlay button { flex: none; min-width: 200px; }
+.cam-overlay p { margin: 0; font-size: 14px; }
+.cam-overlay.hidden, .tool.hidden { display: none; }

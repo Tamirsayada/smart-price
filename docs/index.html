@@ -17,9 +17,22 @@
 
 <main>
   <section id="scan-card" class="card">
-    <div id="reader"></div>
-    <div class="row">
-      <button id="scan-btn" class="primary">📷 סרוק ברקוד</button>
+    <div id="cam" class="cam">
+      <video id="video" playsinline muted autoplay></video>
+      <div id="frame" class="frame">
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
+        <div class="laser"></div>
+      </div>
+      <div id="hint" class="hint">שים את הברקוד בתוך המסגרת, לרוחב</div>
+      <div class="cam-tools">
+        <button id="torch" class="tool hidden" aria-label="פנס">🔦</button>
+        <button id="switch-cam" class="tool hidden" aria-label="החלף מצלמה">🔄</button>
+      </div>
+      <div id="cam-overlay" class="cam-overlay hidden">
+        <button id="cam-action" class="primary">📷 הפעל מצלמה</button>
+        <p id="cam-msg"></p>
+      </div>
     </div>
     <form id="manual" class="row">
       <input id="barcode-input" inputmode="numeric" pattern="[0-9]*" placeholder="או הקלד ברקוד" autocomplete="off">
@@ -45,7 +58,7 @@
   </details>
 </main>
 
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/barcode-detector@3.2.2/dist/iife/ponyfill.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
