@@ -5,7 +5,7 @@
     {"key": "RAMI_LEVY", "folder": "RamiLevy", "name": "רמי לוי", "ref": 6, "local": [31, 69, 70, 27, 63]},
     {"key": "YOHANANOF", "folder": "Yohananof", "name": "יוחננוף", "ref": 4, "local": [9, 55, 51, 40]},
     {"key": "YAYNO_BITAN_AND_CARREFOUR", "folder": "YaynotBitanAndCarrefour", "name": "קרפור", "ref": 6, "local": [127, 120, 416, 440]},
-    {"key": "SHUFERSAL", "folder": "Shufersal", "name": "שופרסל", "ref": 6, "local": [153, 163, 145]},
+    {"key": "SHUFERSAL", "folder": "Shufersal", "name": "שופרסל", "ref": 0, "local": [153, 163, 145], "ref_ids": [413, 176, 241, 135, 214]},
     {"key": "OSHER_AD", "folder": "Osherad", "name": "אושר עד", "ref": 4, "local": [13]},
     {"key": "TIV_TAAM", "folder": "TivTaam", "name": "טיב טעם", "ref": 4, "local": [15]},
     {"key": "GOOD_PHARM", "folder": "GoodPharm", "name": "גוד פארם", "ref": 4, "local": [911, 905]},

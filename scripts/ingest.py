@@ -194,11 +194,12 @@ def main():
         if only and chain["key"] not in only:
             continue
         key, folder, local = chain["key"], chain["folder"], chain.get("local", [])
+        pinned = chain.get("ref_ids", [])  # national branches known to have big catalogs
         log(f"== {key}")
         try:
             scrape(key, [FileTypesFilters.STORE_FILE.name], limit=1)
-            if local:
-                ids = "|".join(str(i) for i in local)
+            if local or pinned:
+                ids = "|".join(str(i) for i in local + pinned)
                 scrape(key, FileTypesFilters.all_full_files(), regex=rf"(?i)(pricefull|promofull)\d+-(\d+-)?0*({ids})-\d{{8}}")
             if chain.get("ref"):
                 scrape(key, [FileTypesFilters.PRICE_FULL_FILE.name], regex=r"(?i)pricefull", limit=chain["ref"] + len(local))
@@ -237,11 +238,26 @@ def main():
                 except Exception as e:
                     log(f"   !! promo {path}: {e}")
 
+        for sid in pinned:
+            path = picked.get((sid, "price"))
+            if not path:
+                log(f"   pinned {sid}: no price file")
+                continue
+            try:
+                rows = parse_prices(path)
+            except Exception as e:
+                log(f"   !! parse {path}: {e}")
+                continue
+            si = len(stores_meta)
+            stores_meta.append({"c": ci, "n": names.get(sid, f"סניף {sid}"), "l": 0})
+            add_rows(rows, si)
+            got += len(rows)
+
         # national reference branches: keep the biggest catalogs
         if chain.get("ref"):
             cands = []
             for (sid, kind), path in picked.items():
-                if kind != "price" or sid in local_idx:
+                if kind != "price" or sid in local_idx or sid in pinned:
                     continue
                 try:
                     rows = parse_prices(path)

@@ -34,7 +34,7 @@ jobs:
       # scraper DEBUG logs dump whole HTML pages; keep only our own progress lines
       - run: |
           set -o pipefail
-          python scripts/ingest.py "${{ inputs.chains }}" 2>&1 | grep --line-buffered -vE "^Logger|^\s*<|^\s*$|^\s+[a-z{}();]" || true
+          python scripts/ingest.py "${{ inputs.chains }}" 2>&1 | grep --line-buffered -E "^== |^   (local|ref|pinned|total|!!)|^done:|^!!|Traceback|^[A-Za-z]*Error" || true
           test -f docs/data/meta.json
       # data lives on its own branch, replaced every day, so main's history stays small
       - name: publish data branch
