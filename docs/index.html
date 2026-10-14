@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>מחיר חכם</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>מחיר חכם</h1>
+  <span id="updated" class="muted"></span>
+</header>
+
+<main>
+  <section id="scan-card" class="card">
+    <div id="reader"></div>
+    <div class="row">
+      <button id="scan-btn" class="primary">📷 סרוק ברקוד</button>
+    </div>
+    <form id="manual" class="row">
+      <input id="barcode-input" inputmode="numeric" pattern="[0-9]*" placeholder="או הקלד ברקוד" autocomplete="off">
+      <button type="submit">חפש</button>
+    </form>
+  </section>
+
+  <section id="result" class="card hidden"></section>
+
+  <details class="card settings">
+    <summary>הגדרות תמחור</summary>
+    <label>תוספת מקסימלית למוצר "שקוף": <b id="maxup-val"></b>%
+      <input id="maxup" type="range" min="0" max="60" step="5">
+    </label>
+    <label>עיגול מחיר לסיומת
+      <select id="ending">
+        <option value="0.90">.90</option>
+        <option value="0.99">.99</option>
+        <option value="0.50">.50 / .90</option>
+        <option value="none">בלי עיגול</option>
+      </select>
+    </label>
+  </details>
+</main>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

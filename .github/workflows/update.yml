@@ -1,0 +1,60 @@
+name: update-and-deploy
+on:
+  schedule:
+    - cron: "30 3 * * *"   # 06:30 Israel time
+  workflow_dispatch:
+    inputs:
+      chains:
+        description: "Comma-separated chain keys (empty = all in config.json)"
+        default: ""
+  push:
+    branches: [main]
+    paths: ["docs/**", "!docs/data/**"]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q il-supermarket-scraper
+      - run: python scripts/ingest.py ${{ inputs.chains }}
+      - name: commit data
+        run: |
+          git config user.name "smart-price-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/data
+          git diff --cached --quiet || git commit -m "data: daily prices update"
+          git pull --rebase -q
+          git push
+
+  deploy:
+    needs: ingest
+    if: always() && (needs.ingest.result == 'success' || needs.ingest.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+      - id: deployment
+        uses: actions/deploy-pages@v4

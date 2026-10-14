@@ -1,0 +1,89 @@
+:root {
+  --bg: #f4f6f5;
+  --card: #ffffff;
+  --text: #1c2421;
+  --muted: #6b7672;
+  --accent: #0f766e;
+  --accent-text: #ffffff;
+  --border: #dde3e0;
+  --low: #15803d;
+  --mid: #b45309;
+  --high: #b91c1c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1413;
+    --card: #182120;
+    --text: #e6ecea;
+    --muted: #93a19c;
+    --accent: #2dd4bf;
+    --accent-text: #062b27;
+    --border: #2a3533;
+    --low: #4ade80;
+    --mid: #fbbf24;
+    --high: #f87171;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 14px 16px 6px;
+}
+h1 { margin: 0; font-size: 22px; color: var(--accent); }
+main { padding: 8px 16px 40px; max-width: 560px; margin: 0 auto; }
+.muted { color: var(--muted); font-size: 13px; }
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 14px; margin-bottom: 14px;
+}
+.hidden { display: none; }
+.row { display: flex; gap: 8px; margin-top: 10px; }
+button, input, select {
+  font: inherit; border-radius: 10px; border: 1px solid var(--border);
+  padding: 12px 14px; background: var(--card); color: var(--text);
+}
+button { cursor: pointer; }
+button.primary {
+  flex: 1; background: var(--accent); color: var(--accent-text);
+  border: none; font-weight: 700; font-size: 18px; padding: 16px;
+}
+#manual input { flex: 1; min-width: 0; direction: ltr; text-align: right; }
+#reader { border-radius: 10px; overflow: hidden; }
+#reader:empty { display: none; }
+
+.product-name { font-size: 20px; font-weight: 700; margin: 0 0 2px; }
+.price-box { text-align: center; margin: 14px 0 6px; }
+.price-box .label { color: var(--muted); font-size: 14px; }
+.price-box .price { font-size: 52px; font-weight: 800; color: var(--accent); line-height: 1.1; }
+.price-box .sub { font-size: 14px; color: var(--muted); }
+
+.meter { margin: 14px 0 4px; }
+.meter-bar { height: 10px; border-radius: 6px; background: var(--border); position: relative; overflow: hidden; }
+.meter-fill { position: absolute; inset-block: 0; right: 0; border-radius: 6px; }
+.meter-head { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+
+ul.reasons { margin: 8px 0 0; padding-inline-start: 20px; font-size: 14px; }
+.warn {
+  border: 1px solid var(--mid); color: var(--mid); border-radius: 10px;
+  padding: 8px 10px; font-size: 14px; margin-top: 10px;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; }
+th, td { padding: 6px 4px; border-bottom: 1px solid var(--border); text-align: right; }
+td.num { direction: ltr; text-align: left; font-variant-numeric: tabular-nums; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; text-align: center; }
+.stats div { background: var(--bg); border-radius: 10px; padding: 8px 4px; }
+.stats b { display: block; font-size: 18px; }
+
+.settings summary { cursor: pointer; font-weight: 600; }
+.settings label { display: block; margin-top: 12px; }
+.settings input[type=range] { width: 100%; padding: 0; }
+.settings select { width: 100%; margin-top: 4px; }

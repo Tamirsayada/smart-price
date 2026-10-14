@@ -1,0 +1,15 @@
+{
+  "store_city": "נתיבות",
+  "chains": [
+    {"key": "RAMI_LEVY", "folder": "RamiLevy", "name": "רמי לוי", "stores": [
+      {"id": 31, "name": "נתיבות"}, {"id": 69, "name": "אופקים"}, {"id": 70, "name": "שדרות"}]},
+    {"key": "YOHANANOF", "folder": "Yohananof", "name": "יוחננוף", "stores": [
+      {"id": 9, "name": "נתיבות"}, {"id": 55, "name": "נתיבות מנהטן"}, {"id": 51, "name": "שדרות"}]},
+    {"key": "YAYNO_BITAN_AND_CARREFOUR", "folder": "YaynotBitanAndCarrefour", "name": "קרפור", "stores": [
+      {"id": 127, "name": "היפר נתיבות"}, {"id": 120, "name": "היפר אופקים"}, {"id": 416, "name": "שדרות"}]},
+    {"key": "SHUFERSAL", "folder": "Shufersal", "name": "שופרסל", "stores": [
+      {"id": 153, "name": "דיל אופקים"}, {"id": 163, "name": "דיל שדרות"}]},
+    {"key": "OSHER_AD", "folder": "Osherad", "name": "אושר עד", "stores": [
+      {"id": 13, "name": "באר שבע"}]}
+  ]
+}
