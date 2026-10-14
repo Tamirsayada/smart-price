@@ -1,0 +1,4 @@
+dumps/
+status_logs/
+__pycache__/
+.venv/

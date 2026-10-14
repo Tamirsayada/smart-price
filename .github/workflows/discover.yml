@@ -1,0 +1,17 @@
+name: discover
+on:
+  workflow_dispatch:
+    inputs:
+      chains:
+        default: "SHUFERSAL,RAMI_LEVY,VICTORY_NEW_SOURCE,YOHANANOF,OSHER_AD,HAZI_HINAM,MAHSANI_ASHUK_NEW_SOURCE,YAYNO_BITAN_AND_CARREFOUR,TIV_TAAM,KESHET,CITY_MARKET_KIRYATGAT"
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q il-supermarket-scraper
+      - run: python scripts/discover.py "${{ inputs.chains }}"
