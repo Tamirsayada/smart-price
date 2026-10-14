@@ -1,0 +1,17 @@
+name: discover
+on:
+  workflow_dispatch:
+    inputs:
+      chains:
+        default: ""
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q il-supermarket-scraper
+      - run: python scripts/discover.py "${{ inputs.chains }}" 2>&1 | grep -v -E "DEBUG|^Logger.*(INFO|WARNING)" | grep -v "^\s*$" | head -400
