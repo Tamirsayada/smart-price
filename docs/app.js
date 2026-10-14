@@ -58,6 +58,8 @@ const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 
 function roundEnding(p, ending) {
   if (ending === "none") return Math.round(p * 100) / 100;
+  // cheap items: a .90 ending would distort the price too much, round to 10 agorot instead
+  if (p < 5) return Math.round(p * 10) / 10;
   if (ending === "0.50") {
     const opts = [Math.floor(p) - 0.1, Math.floor(p) + 0.5, Math.floor(p) + 0.9];
     return opts.reduce((a, b) => Math.abs(b - p) < Math.abs(a - p) ? b : a);
