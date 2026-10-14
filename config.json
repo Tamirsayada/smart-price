@@ -1,15 +1,30 @@
 {
   "store_city": "נתיבות",
+  "_doc": "local = branches near the store (their prices drive the recommendation). ref = how many extra branches to sample nationwide; the 2 with the biggest catalog are kept to widen product coverage.",
   "chains": [
-    {"key": "RAMI_LEVY", "folder": "RamiLevy", "name": "רמי לוי", "stores": [
-      {"id": 31, "name": "נתיבות"}, {"id": 69, "name": "אופקים"}, {"id": 70, "name": "שדרות"}]},
-    {"key": "YOHANANOF", "folder": "Yohananof", "name": "יוחננוף", "stores": [
-      {"id": 9, "name": "נתיבות"}, {"id": 55, "name": "נתיבות מנהטן"}, {"id": 51, "name": "שדרות"}]},
-    {"key": "YAYNO_BITAN_AND_CARREFOUR", "folder": "YaynotBitanAndCarrefour", "name": "קרפור", "stores": [
-      {"id": 127, "name": "היפר נתיבות"}, {"id": 120, "name": "היפר אופקים"}, {"id": 416, "name": "שדרות"}]},
-    {"key": "SHUFERSAL", "folder": "Shufersal", "name": "שופרסל", "stores": [
-      {"id": 153, "name": "דיל אופקים"}, {"id": 163, "name": "דיל שדרות"}]},
-    {"key": "OSHER_AD", "folder": "Osherad", "name": "אושר עד", "stores": [
-      {"id": 13, "name": "באר שבע"}]}
+    {"key": "RAMI_LEVY", "folder": "RamiLevy", "name": "רמי לוי", "ref": 6, "local": [31, 69, 70, 27, 63]},
+    {"key": "YOHANANOF", "folder": "Yohananof", "name": "יוחננוף", "ref": 4, "local": [9, 55, 51, 40]},
+    {"key": "YAYNO_BITAN_AND_CARREFOUR", "folder": "YaynotBitanAndCarrefour", "name": "קרפור", "ref": 6, "local": [127, 120, 416, 440]},
+    {"key": "SHUFERSAL", "folder": "Shufersal", "name": "שופרסל", "ref": 6, "local": [153, 163, 145]},
+    {"key": "OSHER_AD", "folder": "Osherad", "name": "אושר עד", "ref": 4, "local": [13]},
+    {"key": "TIV_TAAM", "folder": "TivTaam", "name": "טיב טעם", "ref": 4, "local": [15]},
+    {"key": "GOOD_PHARM", "folder": "GoodPharm", "name": "גוד פארם", "ref": 4, "local": [911, 905]},
+    {"key": "SHUK_AHIR", "folder": "ShukAhir", "name": "שוק העיר", "ref": 3, "local": [18, 9]},
+    {"key": "SHEFA_BARCART_ASHEM", "folder": "ShefaBarcartAshem", "name": "שפע ברכת השם", "ref": 4, "local": [42]},
+    {"key": "SUPER_SAPIR", "folder": "SuperSapir", "name": "סופר ספיר", "ref": 3, "local": [262, 260]},
+    {"key": "YELLOW", "folder": "Yellow", "name": "ילו", "ref": 0, "local": [612, 616]},
+    {"key": "SALACH_DABACH", "folder": "SalachDabach", "name": "סלאח דבאח", "ref": 3, "local": [13]},
+    {"key": "KING_STORE", "folder": "KingStore", "name": "קינג סטור", "ref": 3, "local": [8]},
+    {"key": "CITY_MARKET_KIRYATGAT", "folder": "CityMarketKiryatGat", "name": "סיטי מרקט", "ref": 3, "local": [3, 73]},
+    {"key": "FRESH_MARKET_AND_SUPER_DOSH", "folder": "FreshMarketAndSuperDosh", "name": "פרש מרקט", "ref": 4, "local": [24]},
+    {"key": "DOR_ALON", "folder": "DorAlon", "name": "דור אלון", "ref": 0, "local": [976]},
+    {"key": "WOLT", "folder": "Wolt", "name": "וולט מרקט", "ref": 0, "local": [7]},
+    {"key": "STOP_MARKET", "folder": "StopMarket", "name": "סטופ מרקט", "ref": 4, "local": []},
+    {"key": "POLIZER", "folder": "Polizer", "name": "פוליצר", "ref": 4, "local": []},
+    {"key": "SUPER_YUDA", "folder": "SuperYuda", "name": "סופר יודה", "ref": 4, "local": []},
+    {"key": "MAAYAN_2000", "folder": "Maayan2000", "name": "מעיין 2000", "ref": 4, "local": []},
+    {"key": "MESHMAT_YOSEF_2", "folder": "MeshnatYosef2", "name": "משנת יוסף", "ref": 4, "local": []},
+    {"key": "ZOL_VEBEGADOL", "folder": "ZolVeBegadol", "name": "זול ובגדול", "ref": 4, "local": []},
+    {"key": "BAREKET", "folder": "Bareket", "name": "ברקת", "ref": 4, "local": []}
   ]
 }

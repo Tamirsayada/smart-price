@@ -44,7 +44,9 @@ async function loadMeta() {
 async function lookup(barcode) {
   const code = norm(barcode);
   if (!code) return null;
-  const shard = code.slice(-2).padStart(2, "0");
+  const digits = (META && META.shard_digits) || 2;
+  const shard = code.slice(-digits).padStart(digits, "0");
+  await loadMeta();
   if (!shardCache[shard]) {
     const r = await fetch(`data/p/${shard}.json`, { cache: "no-cache" });
     shardCache[shard] = r.ok ? await r.json() : {};
@@ -70,15 +72,22 @@ function roundEnding(p, ending) {
   return Math.round(Math.max(best, e) * 100) / 100;
 }
 
+const isLocal = (meta, si) => meta.stores[si].l !== 0;
+
 function score(item, meta) {
-  const prices = item.p.map(([, price]) => price).filter(x => x > 0);
+  // local branches drive the price; national branches only when the product isn't sold nearby
+  const localP = item.p.filter(([si]) => isLocal(meta, si));
+  const national = localP.length < 2;
+  const used = national ? item.p : localP;
+  const prices = used.map(([, price]) => price).filter(x => x > 0);
   const med = median(prices), min = Math.min(...prices), max = Math.max(...prices);
   const mean = prices.reduce((a, b) => a + b, 0) / prices.length;
   const sd = Math.sqrt(prices.reduce((a, b) => a + (b - mean) ** 2, 0) / prices.length);
   const cv = mean ? sd / mean : 0;
 
-  const chainsCarrying = new Set(item.p.map(([s]) => meta.stores[s].c)).size;
+  const chainsCarrying = new Set(localP.map(([s]) => meta.stores[s].c)).size;
   const reasons = [];
+  if (national) reasons.push(localP.length ? "נמכר רק בסניף אחד באזור, החישוב לפי מחירים ארציים" : "לא נמכר בסניפים באזור, החישוב לפי מחירים ארציים");
 
   // 1. dispersion: everyone sells at the same price -> competitive -> sensitive
   let sDisp = 50;
@@ -90,7 +99,7 @@ function score(item, meta) {
   // 2. availability across chains
   const sAvail = clamp((chainsCarrying / meta.chains_total) * 100, 0, 100);
   if (chainsCarrying >= Math.ceil(meta.chains_total * 0.75)) reasons.push("נמכר כמעט בכל הרשתות");
-  else if (chainsCarrying <= 1) reasons.push("נמכר רק ברשת אחת באזור, קשה להשוות מחיר");
+  else if (chainsCarrying <= 1 && !national) reasons.push("נמכר רק ברשת אחת באזור, קשה להשוות מחיר");
   // 3. promotions at competitors
   const promoChains = (item.pr || []).length;
   const sPromo = chainsCarrying ? clamp((promoChains / chainsCarrying) * 100, 0, 100) : 0;
@@ -110,7 +119,19 @@ function score(item, meta) {
   if (controlled) mult = 1;
   const rec = roundEnding(med * mult, settings.ending);
 
-  return { score: s, med, min, max, mult, rec, reasons, controlled, chainsCarrying, n: prices.length };
+  return { score: s, med, min, max, mult, rec, reasons, controlled, chainsCarrying, national, n: prices.length };
+}
+
+// ---------- product name fallback (Open Food Facts, community product database) ----------
+async function offName(code) {
+  try {
+    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 5000);
+    const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name_he,product_name,brands,quantity`, { signal: ctl.signal });
+    const j = await r.json();
+    if (j.status !== 1 || !j.product) return "";
+    const p = j.product;
+    return [p.product_name_he || p.product_name, p.brands, p.quantity].filter(Boolean).join(" · ");
+  } catch { return ""; }
 }
 
 // ---------- UI ----------
@@ -133,19 +154,23 @@ async function show(barcode) {
   catch (e) { box.innerHTML = `<p>שגיאה בטעינת הנתונים: ${esc(e.message)}</p>`; return; }
 
   if (!item) {
-    box.innerHTML = `<p class="product-name">לא נמצאו נתוני שוק</p>
-      <p class="muted">ברקוד ${esc(barcode)} לא מופיע ברשתות שבאזור. ייתכן שזה מותג פרטי, מוצר מקומי, או ברקוד שקל (מוצר שקיל).</p>`;
+    const notFound = name => `<p class="product-name">${name ? esc(name) : "לא נמצאו נתוני שוק"}</p>
+      ${name ? '<p class="warn">המוצר זוהה, אבל אף רשת לא מפרסמת עליו מחיר. אין מחיר שוק להשוואה.</p>' : ""}
+      <p class="muted">ברקוד ${esc(barcode)} לא מופיע ב-${meta.stores.length} הסניפים שנבדקו. ייתכן שזה מותג פרטי של רשת, מוצר מיבואן קטן, או ברקוד פנימי של מוצר שקיל.</p>`;
+    box.innerHTML = notFound("") + '<p class="muted">מחפש את שם המוצר במאגר Open Food Facts…</p>';
+    const name = await offName(barcode);
+    if ($("barcode-input").value.trim() === barcode || !$("barcode-input").value) box.innerHTML = notFound(name);
     return;
   }
   const r = score(item, meta);
   const [lvl, color] = levelOf(r.score);
   const pct = Math.round((r.mult - 1) * 100);
 
-  const rows = item.p
-    .map(([si, price]) => ({ st: meta.stores[si], price }))
-    .sort((a, b) => a.price - b.price)
-    .map(({ st, price }) => `<tr><td>${esc(meta.chains[st.c])}</td><td>${esc(st.n)}</td><td class="num">${fmt(price)}</td></tr>`)
-    .join("");
+  const row = ({ st, price }) => `<tr><td>${esc(meta.chains[st.c])}</td><td>${esc(st.n)}</td><td class="num">${fmt(price)}</td></tr>`;
+  const all = item.p.map(([si, price]) => ({ st: meta.stores[si], price, local: isLocal(meta, si) })).sort((a, b) => a.price - b.price);
+  const loc = all.filter(x => x.local), nat = all.filter(x => !x.local);
+  const rows = (loc.length ? `<tr class="group"><td colspan="3">סניפים באזור (${loc.length})</td></tr>` + loc.map(row).join("") : "")
+    + (nat.length ? `<tr class="group"><td colspan="3">סניפים בשאר הארץ (${nat.length})</td></tr>` + nat.slice(0, 12).map(row).join("") : "");
 
   box.innerHTML = `
     <p class="product-name">${esc(item.n)}</p>
@@ -154,7 +179,7 @@ async function show(barcode) {
     <div class="price-box">
       <div class="label">מחיר מומלץ למדף</div>
       <div class="price">₪${fmt(r.rec)}</div>
-      <div class="sub">חציון השוק ₪${fmt(r.med)} ${pct ? `+ ${pct}%` : "(צמוד לשוק)"}</div>
+      <div class="sub">${r.national ? "חציון ארצי" : "חציון השוק באזור"} ₪${fmt(r.med)} ${pct ? `+ ${pct}%` : "(צמוד לשוק)"}</div>
     </div>
 
     <div class="meter">

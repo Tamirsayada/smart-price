@@ -137,3 +137,4 @@ td.num { direction: ltr; text-align: left; font-variant-numeric: tabular-nums; }
 .cam-overlay button { flex: none; min-width: 200px; }
 .cam-overlay p { margin: 0; font-size: 14px; }
 .cam-overlay.hidden, .tool.hidden { display: none; }
+tr.group td { background: var(--bg); font-weight: 700; font-size: 13px; color: var(--muted); padding-top: 8px; }
