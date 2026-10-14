@@ -1,24 +1,25 @@
 :root {
-  --bg: #f4f6f5;
+  --brand: #25215c;
+  --bg: #f2f2f8;
   --card: #ffffff;
-  --text: #1c2421;
-  --muted: #6b7672;
-  --accent: #0f766e;
+  --text: #1b1a33;
+  --muted: #6a6a85;
+  --accent: #25215c;
   --accent-text: #ffffff;
-  --border: #dde3e0;
+  --border: #dcdcea;
   --low: #15803d;
   --mid: #b45309;
   --high: #b91c1c;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0f1413;
-    --card: #182120;
-    --text: #e6ecea;
-    --muted: #93a19c;
-    --accent: #2dd4bf;
-    --accent-text: #062b27;
-    --border: #2a3533;
+    --bg: #12111f;
+    --card: #1c1b30;
+    --text: #e9e8f5;
+    --muted: #a09fbd;
+    --accent: #a5a1f0;
+    --accent-text: #15132e;
+    --border: #2e2c4a;
     --low: #4ade80;
     --mid: #fbbf24;
     --high: #f87171;
@@ -33,12 +34,18 @@ body {
   font-size: 16px;
   line-height: 1.45;
 }
-header {
-  display: flex; align-items: baseline; justify-content: space-between;
-  padding: 14px 16px 6px;
+header.brand {
+  background: var(--brand); color: #fff;
+  padding: 10px 16px 8px;
+  box-shadow: 0 2px 10px rgba(37, 33, 92, .25);
 }
-h1 { margin: 0; font-size: 22px; color: var(--accent); }
-main { padding: 8px 16px 40px; max-width: 560px; margin: 0 auto; }
+.logo { display: block; width: 100%; max-width: 520px; height: auto; margin: 0 auto; }
+.brand-sub {
+  display: flex; justify-content: space-between; align-items: baseline;
+  max-width: 520px; margin: 4px auto 0; font-size: 13px; color: #cfcdf0;
+}
+.brand-sub b { color: #fff; font-size: 15px; letter-spacing: .3px; }
+main { padding: 14px 16px 40px; max-width: 560px; margin: 0 auto; }
 .muted { color: var(--muted); font-size: 13px; }
 .card {
   background: var(--card); border: 1px solid var(--border);
