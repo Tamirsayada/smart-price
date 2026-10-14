@@ -233,6 +233,8 @@ $("ending").addEventListener("change", e => {
   settings.ending = e.target.value; saveSettings(settings);
   const v = $("barcode-input").value.trim(); if (v && !$("result").classList.contains("hidden")) show(v);
 });
+const fromHash = decodeURIComponent(location.hash.slice(1)).replace(/\D/g, "");
+if (fromHash) { $("barcode-input").value = fromHash; show(fromHash); }
 loadMeta().then(m => {
   $("updated").textContent = `${m.stores.length} סניפים · עודכן ${m.updated}`;
 }).catch(() => { $("updated").textContent = "אין עדיין נתונים"; });
