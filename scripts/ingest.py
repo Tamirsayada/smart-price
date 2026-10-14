@@ -155,6 +155,8 @@ def main():
                         if it is None:
                             qty = child(el, "Quantity")
                             unit = child(el, "UnitQty", "UnitOfMeasure")
+                            if unit in ("לא ידוע", "unknown", "Unknown"):
+                                unit = ""
                             u = f"{qty.rstrip('0').rstrip('.') if '.' in qty else qty} {unit}".strip() if qty and qty not in ("0", "0.00") else ""
                             it = items[code] = {"n": child(el, "ItemName", "ItemNm"), "m": child(el, "ManufacturerName"),
                                                 "u": u, "p": [], "pr": set()}

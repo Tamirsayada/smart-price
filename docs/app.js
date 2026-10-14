@@ -94,7 +94,7 @@ function score(item, meta) {
   // 3. promotions at competitors
   const promoChains = (item.pr || []).length;
   const sPromo = chainsCarrying ? clamp((promoChains / chainsCarrying) * 100, 0, 100) : 0;
-  if (promoChains) reasons.push(`במבצע ב-${promoChains} רשתות, מוצר שהרשתות משתמשות בו כפיתיון`);
+  if (promoChains) reasons.push(`${promoChains === 1 ? "במבצע ברשת אחת" : `במבצע ב-${promoChains} רשתות`}, מוצר שהרשתות משתמשות בו כפיתיון`);
   // 4. category
   const name = item.n || "";
   let sCat = 50;
@@ -149,7 +149,7 @@ async function show(barcode) {
 
   box.innerHTML = `
     <p class="product-name">${esc(item.n)}</p>
-    <p class="muted">${esc([item.m, item.u].filter(Boolean).join(" · "))} · ${esc(barcode)}</p>
+    <p class="muted">${esc([item.m, (item.u || "").replace(/\s*(לא ידוע|unknown)\s*$/i, "")].filter(x => x && !/^\d+(\.\d+)?$/.test(x)).concat(barcode).join(" · "))}</p>
 
     <div class="price-box">
       <div class="label">מחיר מומלץ למדף</div>
