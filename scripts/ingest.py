@@ -64,13 +64,14 @@ def norm_code(code):
 
 
 def store_from_filename(name):
-    m = re.search(r"(?:pricefull|promofull)\d+-(\d+)-", name, re.I)
+    # PriceFull<chainId>-<subChain>-<storeId>-<date>-<time>
+    m = re.search(r"(?:pricefull|promofull)\d+-\d+-(\d+)-", name, re.I)
     return int(m.group(1)) if m else None
 
 
 def download(chain_key, store_ids):
     ids = "|".join(str(i) for i in store_ids)
-    regex = rf"(?i)(pricefull|promofull)\d+-0*({ids})-"
+    regex = rf"(?i)(pricefull|promofull)\d+-\d+-0*({ids})-"
     log(f"== {chain_key}: {regex}")
     task = ScarpingTask(
         enabled_scrapers=[chain_key],
