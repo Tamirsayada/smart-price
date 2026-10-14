@@ -7,7 +7,6 @@ import json
 import os
 import re
 import shutil
-import statistics
 import sys
 import zipfile
 import xml.etree.ElementTree as ET
@@ -133,7 +132,8 @@ def main():
         log(f"   files found: {len(files)}, picked: {sorted((k, os.path.basename(v)) for k, v in picked.items())}")
         got_any = False
 
-        for (sid, kind), path in picked.items():
+        # prices first: promo rows are only counted for items already known
+        for (sid, kind), path in sorted(picked.items(), key=lambda kv: kv[0][1]):
             if sid not in sid_to_idx:
                 continue
             si = sid_to_idx[sid]

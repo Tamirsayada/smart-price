@@ -103,7 +103,7 @@ function score(item, meta) {
   else if (low && !kvi) { sCat = 15; reasons.push(`קטגוריה שהלקוחות פחות זוכרים בה מחירים (${low.trim()})`); }
   else if (kvi && low) { sCat = 55; }
 
-  const s = Math.round(0.30 * sDisp + 0.20 * sAvail + 0.15 * sPromo + 0.35 * sCat);
+  const s = Math.round(0.25 * sDisp + 0.15 * sAvail + 0.15 * sPromo + 0.45 * sCat);
   const controlled = hasAny(name, CONTROLLED);
 
   let mult = 1 + (1 - s / 100) * (settings.maxUp / 100);
